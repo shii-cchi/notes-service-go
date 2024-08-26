@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/go-chi/chi"
+	"github.com/go-playground/validator/v10"
 	_ "github.com/lib/pq"
 	"log"
 	"net/http"
@@ -42,7 +43,7 @@ func Run() {
 	})
 
 	r := chi.NewRouter()
-	h := delivery.NewHandler(services, cfg.RefreshTTL)
+	h := delivery.NewHandler(services, validator.New(), cfg.RefreshTTL)
 	h.RegisterRoutes(r)
 
 	log.Printf(constants.ServerStart+" %s", cfg.Port)

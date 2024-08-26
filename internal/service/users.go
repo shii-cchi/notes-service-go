@@ -2,6 +2,7 @@ package service
 
 import (
 	"notes-service-go/internal/database"
+	"notes-service-go/internal/delivery/dto"
 	"notes-service-go/pkg/auth"
 	"notes-service-go/pkg/hash"
 	"time"
@@ -22,4 +23,20 @@ func NewUsersService(repo *database.Queries, hasher hash.Hasher, tokenManager au
 		TokenManager:   tokenManager,
 		AccessTokenTTL: accessTokenTTL,
 	}
+}
+
+func (s *UsersService) CreateUser(userCredentials dto.UserCredentialsDto) (dto.UserResponseDto, string, error) {
+
+}
+
+func (s *UsersService) Refresh(refreshToken string, accessToken string) (dto.UserResponseDto, string, error) {
+
+}
+
+func (s *UsersService) Login(userCredentials dto.UserCredentialsDto) (dto.UserResponseDto, string, error) {
+
+}
+
+func (s *UsersService) Logout(accessToken string) error {
+
 }

@@ -1,6 +1,8 @@
 package service
 
-import "notes-service-go/internal/database"
+import (
+	"notes-service-go/internal/database"
+)
 
 type NotesService struct {
 	Repo *database.Queries

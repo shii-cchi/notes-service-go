@@ -2,12 +2,17 @@ package service
 
 import (
 	"notes-service-go/internal/database"
+	"notes-service-go/internal/delivery/dto"
 	"notes-service-go/pkg/auth"
 	"notes-service-go/pkg/hash"
 	"time"
 )
 
 type Users interface {
+	CreateUser(userCredentials dto.UserCredentialsDto) (dto.UserResponseDto, string, error)
+	Refresh(refreshToken string, accessToken string) (dto.UserResponseDto, string, error)
+	Login(userCredentials dto.UserCredentialsDto) (dto.UserResponseDto, string, error)
+	Logout(accessToken string) error
 }
 
 type Notes interface {
