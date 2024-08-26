@@ -18,6 +18,7 @@ type Config struct {
 	AccessTTL        time.Duration
 	AccessSigningKey string
 	RefreshTTL       time.Duration
+	SpellerURL       string
 }
 
 func LoadConfig() (*Config, error) {
@@ -93,6 +94,12 @@ func LoadConfig() (*Config, error) {
 		return nil, errors.New(constants.ErrParsingRefreshTTL)
 	}
 
+	spellerURL := os.Getenv("SPELLER_URL")
+
+	if spellerURL == "" {
+		return nil, errors.New("SPELLER_URL" + constants.ErrUndefinedEnvParam)
+	}
+
 	return &Config{
 		Port:             port,
 		DbUser:           dbUser,
@@ -103,5 +110,6 @@ func LoadConfig() (*Config, error) {
 		AccessTTL:        accessTTL,
 		AccessSigningKey: accessSigningKey,
 		RefreshTTL:       refreshTTL,
+		SpellerURL:       spellerURL,
 	}, nil
 }

@@ -44,7 +44,10 @@ const (
 
 // note service
 const (
-	ErrInvalidAccessToken = "invalid access token"
-	ErrGettingNotes       = "error getting notes"
-	ErrCreatingNote       = "error creating note"
+	ErrInvalidAccessToken     = "invalid access token"
+	ErrParsingID              = "error parsing id"
+	ErrGettingNotes           = "error getting notes"
+	ErrCreatingNote           = "error creating note"
+	ErrCheckingSpellingErrors = "error checking spelling errors"
+	ErrSpellingText           = "error spelling text"
 )

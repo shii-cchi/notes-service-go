@@ -5,6 +5,7 @@ import (
 	"notes-service-go/internal/delivery/dto"
 	"notes-service-go/pkg/auth"
 	"notes-service-go/pkg/hash"
+	"notes-service-go/pkg/spell"
 	"time"
 )
 
@@ -28,6 +29,7 @@ type Services struct {
 type Deps struct {
 	Repo         *database.Queries
 	Hasher       hash.Hasher
+	Speller      spell.Speller
 	TokenManager auth.TokenManager
 
 	AccessTokenTTL time.Duration
@@ -35,7 +37,7 @@ type Deps struct {
 
 func NewServices(deps Deps) *Services {
 	usersService := NewUsersService(deps.Repo, deps.Hasher, deps.TokenManager, deps.AccessTokenTTL)
-	notesService := NewNotesService(deps.Repo, deps.TokenManager)
+	notesService := NewNotesService(deps.Repo, deps.Speller, deps.TokenManager)
 
 	return &Services{
 		Users: usersService,

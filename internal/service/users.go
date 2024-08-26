@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"notes-service-go/internal/constants"
 	"notes-service-go/internal/database"
 	"notes-service-go/internal/delivery/dto"
@@ -66,9 +67,14 @@ func (s *UsersService) CreateUser(userCredentials dto.UserCredentialsDto) (dto.U
 }
 
 func (s *UsersService) Refresh(refreshToken string, accessToken string) (dto.UserResponseDto, string, error) {
-	userID, err := s.TokenManager.ParseAccessToken(accessToken)
+	userIDStr, err := s.TokenManager.ParseAccessToken(accessToken)
 	if err != nil {
 		return dto.UserResponseDto{}, "", fmt.Errorf(constants.ErrInvalidAccessToken+" :%s\n", err)
+	}
+
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return dto.UserResponseDto{}, "", fmt.Errorf(constants.ErrParsingID+" :%s\n", err)
 	}
 
 	hashedStoredRefreshToken, err := s.Repo.GetRefreshTokenById(context.Background(), userID)
@@ -130,9 +136,14 @@ func (s *UsersService) Login(userCredentials dto.UserCredentialsDto) (dto.UserRe
 }
 
 func (s *UsersService) Logout(accessToken string) error {
-	userID, err := s.TokenManager.ParseAccessToken(accessToken)
+	userIDStr, err := s.TokenManager.ParseAccessToken(accessToken)
 	if err != nil {
 		return fmt.Errorf(constants.ErrInvalidAccessToken+" :%s\n", err)
+	}
+
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return fmt.Errorf(constants.ErrParsingID+" :%s\n", err)
 	}
 
 	if err = s.Repo.Logout(context.Background(), userID); err != nil {

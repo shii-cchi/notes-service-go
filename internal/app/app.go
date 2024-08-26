@@ -15,6 +15,7 @@ import (
 	"notes-service-go/internal/service"
 	"notes-service-go/pkg/auth"
 	"notes-service-go/pkg/hash"
+	"notes-service-go/pkg/spell"
 )
 
 func Run() {
@@ -34,10 +35,12 @@ func Run() {
 
 	queries := database.New(conn)
 	hasher := hash.NewBcryptHasher()
+	speller := spell.NewYandexSpeller(cfg.SpellerURL)
 	tokenManager := auth.NewManager(cfg.AccessSigningKey, hasher)
 	services := service.NewServices(service.Deps{
 		Repo:           queries,
 		Hasher:         hasher,
+		Speller:        speller,
 		TokenManager:   tokenManager,
 		AccessTokenTTL: cfg.AccessTTL,
 	})

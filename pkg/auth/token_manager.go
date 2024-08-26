@@ -23,7 +23,7 @@ const (
 type TokenManager interface {
 	NewAccessToken(userID uuid.UUID, accessTokenTTL time.Duration) (string, error)
 	NewRefreshToken() (string, string, error)
-	ParseAccessToken(accessToken string) (uuid.UUID, error)
+	ParseAccessToken(accessToken string) (string, error)
 	IsValidRefreshToken(hashedRefreshToken, refreshToken string) bool
 }
 
@@ -67,9 +67,9 @@ func (m *Manager) NewRefreshToken() (string, string, error) {
 	return refreshTokenStr, hashedRefreshToken, nil
 }
 
-func (m *Manager) ParseAccessToken(accessToken string) (uuid.UUID, error) {
+func (m *Manager) ParseAccessToken(accessToken string) (string, error) {
 	if accessToken == "" {
-		return uuid.Nil, errors.New(errAccessTokenUndefined)
+		return "", errors.New(errAccessTokenUndefined)
 	}
 
 	if strings.HasPrefix(accessToken, accessTokenPrefix) {
@@ -84,14 +84,14 @@ func (m *Manager) ParseAccessToken(accessToken string) (uuid.UUID, error) {
 		return []byte(m.accessSigningKey), nil
 	})
 	if err != nil {
-		return uuid.Nil, err
+		return "", err
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
-		return claims["sub"].(uuid.UUID), nil
+		return claims["sub"].(string), nil
 	}
 
-	return uuid.Nil, fmt.Errorf(errGettingClaims)
+	return "", fmt.Errorf(errGettingClaims)
 }
 
 func (m *Manager) IsValidRefreshToken(hashedRefreshToken, refreshToken string) bool {

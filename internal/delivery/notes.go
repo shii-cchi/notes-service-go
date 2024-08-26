@@ -74,6 +74,10 @@ func (h NotesHandler) createHandler(w http.ResponseWriter, r *http.Request) {
 			respondWithError(w, http.StatusUnauthorized, constants.ErrInvalidAccessToken)
 			return
 		}
+		if strings.HasPrefix(err.Error(), constants.ErrSpellingText) {
+			respondWithError(w, http.StatusBadRequest, err.Error())
+			return
+		}
 		respondWithError(w, http.StatusInternalServerError, constants.ErrCreatingNote)
 		return
 	}
