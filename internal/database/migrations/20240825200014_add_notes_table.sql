@@ -1,5 +1,8 @@
 -- +goose Up
 -- +goose StatementBegin
+DROP EXTENSION IF EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 CREATE TABLE notes (
     id UUID DEFAULT uuid_generate_v4() NOT NULL PRIMARY KEY,
     name TEXT NOT NULL,

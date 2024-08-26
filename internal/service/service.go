@@ -16,6 +16,8 @@ type Users interface {
 }
 
 type Notes interface {
+	GetNotes(accessToken string) ([]dto.NoteResponseDto, error)
+	CreateNote(noteInput dto.NoteInputDto, accessToken string) (dto.NoteResponseDto, error)
 }
 
 type Services struct {
@@ -33,7 +35,7 @@ type Deps struct {
 
 func NewServices(deps Deps) *Services {
 	usersService := NewUsersService(deps.Repo, deps.Hasher, deps.TokenManager, deps.AccessTokenTTL)
-	notesService := NewNotesService(deps.Repo)
+	notesService := NewNotesService(deps.Repo, deps.TokenManager)
 
 	return &Services{
 		Users: usersService,

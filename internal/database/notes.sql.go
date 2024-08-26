@@ -11,12 +11,38 @@ import (
 	"github.com/google/uuid"
 )
 
+const createNote = `-- name: CreateNote :one
+INSERT INTO notes (name, content, user_id)
+VALUES ($1, $2, $3)
+RETURNING id, name, content
+`
+
+type CreateNoteParams struct {
+	Name    string
+	Content string
+	UserID  uuid.UUID
+}
+
+type CreateNoteRow struct {
+	ID      uuid.UUID
+	Name    string
+	Content string
+}
+
+func (q *Queries) CreateNote(ctx context.Context, arg CreateNoteParams) (CreateNoteRow, error) {
+	row := q.db.QueryRowContext(ctx, createNote, arg.Name, arg.Content, arg.UserID)
+	var i CreateNoteRow
+	err := row.Scan(&i.ID, &i.Name, &i.Content)
+	return i, err
+}
+
 const getNotes = `-- name: GetNotes :many
-SELECT name, content FROM notes
+SELECT id, name, content FROM notes
 WHERE user_id = $1
 `
 
 type GetNotesRow struct {
+	ID      uuid.UUID
 	Name    string
 	Content string
 }
@@ -30,7 +56,7 @@ func (q *Queries) GetNotes(ctx context.Context, userID uuid.UUID) ([]GetNotesRow
 	var items []GetNotesRow
 	for rows.Next() {
 		var i GetNotesRow
-		if err := rows.Scan(&i.Name, &i.Content); err != nil {
+		if err := rows.Scan(&i.ID, &i.Name, &i.Content); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

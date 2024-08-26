@@ -3,21 +3,27 @@ package auth
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/google/uuid"
 	"notes-service-go/pkg/hash"
+	"strings"
 	"time"
 )
 
 const (
-	ErrUnexpectedSigningMethod = "unexpected signing method"
-	ErrGettingClaims           = "error getting user claims from token"
+	errUnexpectedSigningMethod = "unexpected signing method"
+	errAccessTokenUndefined    = "access token is undefined"
+	errGettingClaims           = "error getting user claims from token"
+
+	accessTokenPrefix = "Bearer "
 )
 
 type TokenManager interface {
-	NewAccessToken(userID string, accessTokenTTL time.Duration) (string, error)
+	NewAccessToken(userID uuid.UUID, accessTokenTTL time.Duration) (string, error)
 	NewRefreshToken() (string, string, error)
-	ParseAccessToken(accessToken string) (string, error)
+	ParseAccessToken(accessToken string) (uuid.UUID, error)
 	IsValidRefreshToken(hashedRefreshToken, refreshToken string) bool
 }
 
@@ -33,11 +39,11 @@ func NewManager(accessSigningKey string, hasher hash.Hasher) *Manager {
 	}
 }
 
-func (m *Manager) NewAccessToken(userID string, accessTokenTTL time.Duration) (string, error) {
+func (m *Manager) NewAccessToken(userID uuid.UUID, accessTokenTTL time.Duration) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.StandardClaims{
 		ExpiresAt: time.Now().Add(accessTokenTTL).Unix(),
 		IssuedAt:  time.Now().Unix(),
-		Subject:   userID,
+		Subject:   userID.String(),
 	})
 
 	return token.SignedString([]byte(m.accessSigningKey))
@@ -54,27 +60,38 @@ func (m *Manager) NewRefreshToken() (string, string, error) {
 	refreshTokenStr := base64.StdEncoding.EncodeToString(refreshToken)
 
 	hashedRefreshToken, err := m.hasher.Hash(refreshTokenStr)
+	if err != nil {
+		return "", "", err
+	}
 
 	return refreshTokenStr, hashedRefreshToken, nil
 }
 
-func (m *Manager) ParseAccessToken(accessToken string) (string, error) {
+func (m *Manager) ParseAccessToken(accessToken string) (uuid.UUID, error) {
+	if accessToken == "" {
+		return uuid.Nil, errors.New(errAccessTokenUndefined)
+	}
+
+	if strings.HasPrefix(accessToken, accessTokenPrefix) {
+		accessToken = strings.TrimPrefix(accessToken, accessTokenPrefix)
+	}
+
 	token, err := jwt.Parse(accessToken, func(token *jwt.Token) (i interface{}, err error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf(ErrUnexpectedSigningMethod+": %v", token.Header["alg"])
+			return nil, fmt.Errorf(errUnexpectedSigningMethod+": %v", token.Header["alg"])
 		}
 
 		return []byte(m.accessSigningKey), nil
 	})
 	if err != nil {
-		return "", err
+		return uuid.Nil, err
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
-		return claims["sub"].(string), nil
+		return claims["sub"].(uuid.UUID), nil
 	}
 
-	return "", fmt.Errorf(ErrGettingClaims)
+	return uuid.Nil, fmt.Errorf(errGettingClaims)
 }
 
 func (m *Manager) IsValidRefreshToken(hashedRefreshToken, refreshToken string) bool {

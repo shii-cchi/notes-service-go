@@ -9,3 +9,7 @@ const (
 const (
 	UserCredentialsUsage = "(login and password must be at least 6 characters long and can't be empty)"
 )
+
+const (
+	NoteInputUsage = "(both 'name' and 'content' fields are required and can't be empty)"
+)

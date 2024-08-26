@@ -9,6 +9,7 @@ import (
 	"notes-service-go/internal/constants"
 	"notes-service-go/internal/delivery/dto"
 	"notes-service-go/internal/service"
+	"strings"
 	"time"
 )
 
@@ -55,7 +56,13 @@ func (h UsersHandler) registerHandler(w http.ResponseWriter, r *http.Request) {
 
 	user, refreshToken, err := h.usersService.CreateUser(userCredentials)
 	if err != nil {
-		// TODO handle error 400 - if user already exists, 500 - another
+		log.Println(err)
+		if strings.HasPrefix(err.Error(), constants.ErrUserAlreadyExists) {
+			respondWithError(w, http.StatusBadRequest, constants.ErrUserAlreadyExists)
+			return
+		}
+		respondWithError(w, http.StatusInternalServerError, constants.ErrCreatingUser)
+		return
 	}
 	setCookie(w, refreshToken, h.refreshTokenTTL)
 	respondWithJSON(w, http.StatusCreated, user)
@@ -68,7 +75,7 @@ func (h UsersHandler) refreshHandler(w http.ResponseWriter, r *http.Request) {
 			respondWithError(w, http.StatusUnauthorized, constants.ErrCookieNotFound)
 			return
 		}
-		respondWithError(w, http.StatusUnauthorized, constants.ErrGettingRefreshToken)
+		respondWithError(w, http.StatusUnauthorized, constants.ErrGettingRefreshTokenFromCookie)
 		return
 	}
 	refreshToken := cookie.Value
@@ -77,7 +84,17 @@ func (h UsersHandler) refreshHandler(w http.ResponseWriter, r *http.Request) {
 
 	user, refreshToken, err := h.usersService.Refresh(refreshToken, accessToken)
 	if err != nil {
-		// TODO handle error 401 - unauth, 500 - another
+		log.Println(err)
+		if strings.HasPrefix(err.Error(), constants.ErrInvalidAccessToken) {
+			respondWithError(w, http.StatusUnauthorized, constants.ErrInvalidAccessToken)
+			return
+		}
+		if strings.HasPrefix(err.Error(), constants.ErrInvalidRefreshToken) {
+			respondWithError(w, http.StatusUnauthorized, constants.ErrInvalidRefreshToken)
+			return
+		}
+		respondWithError(w, http.StatusInternalServerError, constants.ErrRefresh)
+		return
 	}
 	setCookie(w, refreshToken, h.refreshTokenTTL)
 	respondWithJSON(w, http.StatusOK, user)
@@ -99,7 +116,13 @@ func (h UsersHandler) loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	user, refreshToken, err := h.usersService.Login(userCredentials)
 	if err != nil {
-		// TODO handle error 500 - another
+		log.Println(err)
+		if strings.HasPrefix(err.Error(), constants.ErrUserNotFound) || strings.HasPrefix(err.Error(), constants.ErrWrongCredentials) {
+			respondWithError(w, http.StatusBadRequest, constants.ErrWrongCredentials)
+			return
+		}
+		respondWithError(w, http.StatusInternalServerError, constants.ErrLogin)
+		return
 	}
 	setCookie(w, refreshToken, h.refreshTokenTTL)
 	respondWithJSON(w, http.StatusOK, user)
@@ -109,7 +132,13 @@ func (h UsersHandler) logoutHandler(w http.ResponseWriter, r *http.Request) {
 	accessToken := r.Header.Get("Authorization")
 
 	if err := h.usersService.Logout(accessToken); err != nil {
-		// TODO handle error 500 - another, 401 - unauth
+		log.Println(err)
+		if strings.HasPrefix(err.Error(), constants.ErrInvalidAccessToken) {
+			respondWithError(w, http.StatusUnauthorized, constants.ErrInvalidAccessToken)
+			return
+		}
+		respondWithError(w, http.StatusInternalServerError, constants.ErrLogout)
+		return
 	}
 
 	deleteCookie(w)
