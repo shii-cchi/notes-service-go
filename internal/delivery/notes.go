@@ -61,7 +61,7 @@ func (h NotesHandler) createHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.validator.Struct(&noteInput); err != nil {
 		log.Printf(constants.ErrInvalidNoteInput+" :%s\n", err)
-		respondWithError(w, http.StatusBadRequest, constants.ErrInvalidNoteInput+" "+constants.NoteInputUsage)
+		respondWithError(w, http.StatusBadRequest, constants.ErrInvalidNoteInput)
 		return
 	}
 

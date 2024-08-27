@@ -37,7 +37,7 @@ func setCookie(w http.ResponseWriter, refreshToken string, refreshTTL time.Durat
 		Value:    refreshToken,
 		HttpOnly: true,
 		Expires:  time.Now().Add(refreshTTL),
-		Path:     "/users", // TODO check right path for cookie
+		Path:     "/users",
 	}
 
 	http.SetCookie(w, &cookie)
@@ -49,7 +49,7 @@ func deleteCookie(w http.ResponseWriter) {
 		Value:    "",
 		HttpOnly: true,
 		Expires:  time.Now().Add(-time.Hour),
-		Path:     "/users", // TODO check right path for cookie
+		Path:     "/users",
 	}
 
 	http.SetCookie(w, &cookie)

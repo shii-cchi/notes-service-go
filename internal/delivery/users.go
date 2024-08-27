@@ -50,7 +50,7 @@ func (h UsersHandler) registerHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.validator.Struct(&userCredentials); err != nil {
 		log.Printf(constants.ErrInvalidUserCredentials+" :%s\n", err)
-		respondWithError(w, http.StatusBadRequest, constants.ErrInvalidUserCredentials+" "+constants.UserCredentialsUsage)
+		respondWithError(w, http.StatusBadRequest, constants.ErrInvalidUserCredentials)
 		return
 	}
 
@@ -110,7 +110,7 @@ func (h UsersHandler) loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.validator.Struct(&userCredentials); err != nil {
 		log.Printf(constants.ErrInvalidUserCredentials+" :%s\n", err)
-		respondWithError(w, http.StatusBadRequest, constants.ErrInvalidUserCredentials+" "+constants.UserCredentialsUsage)
+		respondWithError(w, http.StatusBadRequest, constants.ErrInvalidUserCredentials)
 		return
 	}
 

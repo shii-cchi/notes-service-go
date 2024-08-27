@@ -1,6 +1,5 @@
 package constants
 
-// app
 const (
 	ErrUndefinedEnvParam = "parameter is undefined"
 	ErrParsingAccessTTL  = "error parsing access ttl"
@@ -9,22 +8,19 @@ const (
 	ErrConnectingToDb    = "error connecting to db"
 )
 
-// user handlers
 const (
 	ErrParsingUserCredentials        = "error parsing user credentials"
-	ErrInvalidUserCredentials        = "invalid user credentials"
+	ErrInvalidUserCredentials        = "invalid user credentials(login and password must be at least 6 characters long and can't be empty)"
 	ErrCookieNotFound                = "cookie with name refresh_token not found"
 	ErrGettingRefreshTokenFromCookie = "error getting refresh token from cookie"
 	ErrLogin                         = "login error"
 )
 
-// note handlers
 const (
 	ErrParsingNoteInput = "error parsing note input"
-	ErrInvalidNoteInput = "invalid note input"
+	ErrInvalidNoteInput = "invalid note input(both 'name' and 'content' fields are required and can't be empty)"
 )
 
-// user service
 const (
 	ErrCheckingUserExist         = "error checking user exist"
 	ErrUserAlreadyExists         = "user with this login already exists"
@@ -42,7 +38,6 @@ const (
 	ErrRefresh                   = "refresh error"
 )
 
-// note service
 const (
 	ErrInvalidAccessToken     = "invalid access token"
 	ErrParsingID              = "error parsing id"
