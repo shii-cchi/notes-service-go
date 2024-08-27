@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
@@ -69,7 +70,10 @@ func (s *UsersService) CreateUser(userCredentials dto.UserCredentialsDto) (dto.U
 func (s *UsersService) Refresh(refreshToken string, accessToken string) (dto.UserResponseDto, string, error) {
 	userIDStr, err := s.TokenManager.ParseAccessToken(accessToken)
 	if err != nil {
-		return dto.UserResponseDto{}, "", fmt.Errorf(domain.ErrInvalidAccessToken+" :%s\n", err)
+		if err.Error() == domain.ErrAccessTokenUndefined {
+			return dto.UserResponseDto{}, "", err
+		}
+		return dto.UserResponseDto{}, "", errors.New(domain.ErrInvalidAccessToken)
 	}
 
 	userID, err := uuid.Parse(userIDStr)
@@ -107,15 +111,15 @@ func (s *UsersService) Refresh(refreshToken string, accessToken string) (dto.Use
 func (s *UsersService) Login(userCredentials dto.UserCredentialsDto) (dto.UserResponseDto, string, error) {
 	user, err := s.Repo.GetUserByLogin(context.Background(), userCredentials.Login)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return dto.UserResponseDto{}, "", fmt.Errorf(domain.ErrUserNotFound+": %s\n", err)
+		}
 		return dto.UserResponseDto{}, "", fmt.Errorf(domain.ErrGettingPassword+": %s\n", err)
-	}
-	if user.Password == "" {
-		return dto.UserResponseDto{}, "", errors.New(domain.ErrUserNotFound)
 	}
 
 	valid := s.Hasher.IsValidData(user.Password, userCredentials.Password)
 	if !valid {
-		return dto.UserResponseDto{}, "", errors.New(domain.ErrWrongCredentials)
+		return dto.UserResponseDto{}, "", errors.New(domain.ErrWrongPassword)
 	}
 
 	refreshToken, hashedRefreshToken, err := s.TokenManager.NewRefreshToken()
@@ -138,7 +142,10 @@ func (s *UsersService) Login(userCredentials dto.UserCredentialsDto) (dto.UserRe
 func (s *UsersService) Logout(accessToken string) error {
 	userIDStr, err := s.TokenManager.ParseAccessToken(accessToken)
 	if err != nil {
-		return fmt.Errorf(domain.ErrInvalidAccessToken+" :%s\n", err)
+		if err.Error() == domain.ErrAccessTokenUndefined {
+			return err
+		}
+		return errors.New(domain.ErrInvalidAccessToken)
 	}
 
 	userID, err := uuid.Parse(userIDStr)

@@ -10,8 +10,7 @@ import (
 	"net/http"
 	"notes-service-go/internal/config"
 	"notes-service-go/internal/database"
-	"notes-service-go/internal/delivery"
-	"notes-service-go/internal/domain"
+	"notes-service-go/internal/delivery/handlers"
 	"notes-service-go/internal/service"
 	"notes-service-go/pkg/auth"
 	"notes-service-go/pkg/hash"
@@ -19,9 +18,12 @@ import (
 )
 
 const (
-	SuccessfulConfigLoad   = "config has been loaded successfully"
-	SuccessfulDBConnection = "successful connection to db"
-	ServerStart            = "server starting on port"
+	errLoadingConfig  = "error loading config"
+	errConnectingToDb = "error connecting to db"
+
+	successfulConfigLoad   = "config has been loaded successfully"
+	successfulDBConnection = "successful connection to db"
+	serverStart            = "server starting on port"
 )
 
 func Run() {
@@ -29,17 +31,17 @@ func Run() {
 
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		log.Fatalf(domain.ErrLoadingConfig+": %s\n", err)
+		log.Fatalf(errLoadingConfig+": %s\n", err)
 	}
-	log.Println(SuccessfulConfigLoad)
+	log.Println(successfulConfigLoad)
 
 	conn, err := sql.Open("postgres", fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=disable", cfg.DbUser, cfg.DbPassword, cfg.DbHost, cfg.DbPort, cfg.DbName))
 	if err != nil {
-		log.Fatalf(domain.ErrConnectingToDb+": %s\n", err)
+		log.Fatalf(errConnectingToDb+": %s\n", err)
 	}
-	log.Println(SuccessfulDBConnection)
-
+	log.Println(successfulDBConnection)
 	queries := database.New(conn)
+
 	hasher := hash.NewBcryptHasher()
 	speller := spell.NewYandexSpeller(cfg.SpellerURL)
 	tokenManager := auth.NewManager(cfg.AccessSigningKey, hasher)
@@ -52,9 +54,9 @@ func Run() {
 	})
 
 	r := chi.NewRouter()
-	h := delivery.NewHandler(services, validator.New(), cfg.RefreshTTL)
+	h := handlers.NewHandler(services, validator.New(), cfg.RefreshTTL)
 	h.RegisterRoutes(r)
 
-	log.Printf(ServerStart+" %s", cfg.Port)
+	log.Printf(serverStart+" %s", cfg.Port)
 	log.Fatal(http.ListenAndServe(":"+cfg.Port, r))
 }

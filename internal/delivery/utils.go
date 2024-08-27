@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
+func RespondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	data, err := json.Marshal(payload)
 
 	if err != nil {
@@ -21,17 +21,17 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Write(data)
 }
 
-func respondWithError(w http.ResponseWriter, code int, msg string) {
+func RespondWithError(w http.ResponseWriter, code int, msg string) {
 	type errResponse struct {
 		Error string `json:"error"`
 	}
 
-	respondWithJSON(w, code, errResponse{
+	RespondWithJSON(w, code, errResponse{
 		Error: msg,
 	})
 }
 
-func setCookie(w http.ResponseWriter, refreshToken string, refreshTTL time.Duration) {
+func SetCookie(w http.ResponseWriter, refreshToken string, refreshTTL time.Duration) {
 	cookie := http.Cookie{
 		Name:     "refresh_token",
 		Value:    refreshToken,
@@ -43,7 +43,7 @@ func setCookie(w http.ResponseWriter, refreshToken string, refreshTTL time.Durat
 	http.SetCookie(w, &cookie)
 }
 
-func deleteCookie(w http.ResponseWriter) {
+func DeleteCookie(w http.ResponseWriter) {
 	cookie := http.Cookie{
 		Name:     "refresh_token",
 		Value:    "",

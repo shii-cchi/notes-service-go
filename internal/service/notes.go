@@ -29,7 +29,10 @@ func NewNotesService(repo *database.Queries, speller spell.Speller, tokenManager
 func (s *NotesService) GetNotes(accessToken string) ([]dto.NoteResponseDto, error) {
 	userIDStr, err := s.TokenManager.ParseAccessToken(accessToken)
 	if err != nil {
-		return nil, fmt.Errorf(domain.ErrInvalidAccessToken+" :%s\n", err)
+		if err.Error() == domain.ErrAccessTokenUndefined {
+			return nil, err
+		}
+		return nil, errors.New(domain.ErrInvalidAccessToken)
 	}
 
 	userID, err := uuid.Parse(userIDStr)
@@ -48,7 +51,10 @@ func (s *NotesService) GetNotes(accessToken string) ([]dto.NoteResponseDto, erro
 func (s *NotesService) CreateNote(noteInput dto.NoteInputDto, accessToken string) (dto.NoteResponseDto, error) {
 	userIDStr, err := s.TokenManager.ParseAccessToken(accessToken)
 	if err != nil {
-		return dto.NoteResponseDto{}, fmt.Errorf(domain.ErrInvalidAccessToken+" :%s\n", err)
+		if err.Error() == domain.ErrAccessTokenUndefined {
+			return dto.NoteResponseDto{}, err
+		}
+		return dto.NoteResponseDto{}, errors.New(domain.ErrInvalidAccessToken)
 	}
 
 	userID, err := uuid.Parse(userIDStr)

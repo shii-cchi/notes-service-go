@@ -97,7 +97,7 @@ func LoadConfig() (*Config, error) {
 	spellerURL := os.Getenv("SPELLER_URL")
 
 	if spellerURL == "" {
-		return nil, errors.New("SPELLER_URL" + domain.ErrUndefinedEnvParam)
+		return nil, errors.New("SPELLER_URL " + domain.ErrUndefinedEnvParam)
 	}
 
 	return &Config{
