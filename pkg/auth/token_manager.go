@@ -1,8 +1,6 @@
 package auth
 
 import (
-	"crypto/rand"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
@@ -21,67 +19,55 @@ const (
 )
 
 type TokenManager interface {
-	NewAccessToken(userID uuid.UUID, accessTokenTTL time.Duration) (string, error)
-	NewRefreshToken() (string, string, error)
+	NewAccessToken(userID uuid.UUID) (string, error)
+	NewRefreshToken(userID uuid.UUID) (string, error)
 	ParseAccessToken(accessToken string) (string, error)
-	IsValidRefreshToken(hashedRefreshToken, refreshToken string) bool
+	ParseRefreshToken(refreshToken string) (string, error)
 }
 
 type Manager struct {
-	accessSigningKey string
-	hasher           hash.Hasher
+	accessTTL         time.Duration
+	refreshTTL        time.Duration
+	accessSigningKey  string
+	refreshSigningKey string
+	hasher            hash.Hasher
 }
 
-func NewManager(accessSigningKey string, hasher hash.Hasher) *Manager {
+func NewManager(accessTTL time.Duration, refreshTTL time.Duration, accessSigningKey string, refreshSigningKey string, hasher hash.Hasher) *Manager {
 	return &Manager{
-		accessSigningKey: accessSigningKey,
-		hasher:           hasher,
+		accessTTL:         accessTTL,
+		refreshTTL:        refreshTTL,
+		accessSigningKey:  accessSigningKey,
+		refreshSigningKey: refreshSigningKey,
+		hasher:            hasher,
 	}
 }
 
-func (m *Manager) NewAccessToken(userID uuid.UUID, accessTokenTTL time.Duration) (string, error) {
+func (m *Manager) newToken(userID uuid.UUID, ttl time.Duration, signingKey string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.StandardClaims{
-		ExpiresAt: time.Now().Add(accessTokenTTL).Unix(),
+		ExpiresAt: time.Now().Add(ttl).Unix(),
 		IssuedAt:  time.Now().Unix(),
 		Subject:   userID.String(),
 	})
 
-	return token.SignedString([]byte(m.accessSigningKey))
+	return token.SignedString([]byte(signingKey))
 }
 
-func (m *Manager) NewRefreshToken() (string, string, error) {
-	refreshToken := make([]byte, 32)
-
-	_, err := rand.Read(refreshToken)
-	if err != nil {
-		return "", "", err
-	}
-
-	refreshTokenStr := base64.StdEncoding.EncodeToString(refreshToken)
-
-	hashedRefreshToken, err := m.hasher.Hash(refreshTokenStr)
-	if err != nil {
-		return "", "", err
-	}
-
-	return refreshTokenStr, hashedRefreshToken, nil
+func (m *Manager) NewAccessToken(userID uuid.UUID) (string, error) {
+	return m.newToken(userID, m.accessTTL, m.accessSigningKey)
 }
 
-func (m *Manager) ParseAccessToken(accessToken string) (string, error) {
-	if accessToken == "" {
-		return "", errors.New(errAccessTokenUndefined)
-	}
+func (m *Manager) NewRefreshToken(userID uuid.UUID) (string, error) {
+	return m.newToken(userID, m.refreshTTL, m.refreshSigningKey)
+}
 
-	if strings.HasPrefix(accessToken, accessTokenPrefix) {
-		accessToken = strings.TrimPrefix(accessToken, accessTokenPrefix)
-	}
-
-	token, err := jwt.Parse(accessToken, func(token *jwt.Token) (i interface{}, err error) {
+func (m *Manager) parseToken(receivedToken string, signingKey string) (string, error) {
+	token, err := jwt.Parse(receivedToken, func(token *jwt.Token) (i interface{}, err error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf(errUnexpectedSigningMethod+": %v", token.Header["alg"])
 		}
 
-		return []byte(m.accessSigningKey), nil
+		return []byte(signingKey), nil
 	})
 	if err != nil {
 		return "", err
@@ -94,6 +80,18 @@ func (m *Manager) ParseAccessToken(accessToken string) (string, error) {
 	return "", fmt.Errorf(errGettingClaims)
 }
 
-func (m *Manager) IsValidRefreshToken(hashedRefreshToken, refreshToken string) bool {
-	return m.hasher.IsValidData(hashedRefreshToken, refreshToken)
+func (m *Manager) ParseAccessToken(accessToken string) (string, error) {
+	if accessToken == "" {
+		return "", errors.New(errAccessTokenUndefined)
+	}
+
+	if strings.HasPrefix(accessToken, accessTokenPrefix) {
+		accessToken = strings.TrimPrefix(accessToken, accessTokenPrefix)
+	}
+
+	return m.parseToken(accessToken, m.accessSigningKey)
+}
+
+func (m *Manager) ParseRefreshToken(refreshToken string) (string, error) {
+	return m.parseToken(refreshToken, m.refreshSigningKey)
 }

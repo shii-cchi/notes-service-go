@@ -44,13 +44,12 @@ func Run() {
 
 	hasher := hash.NewBcryptHasher()
 	speller := spell.NewYandexSpeller(cfg.SpellerURL)
-	tokenManager := auth.NewManager(cfg.AccessSigningKey, hasher)
+	tokenManager := auth.NewManager(cfg.AccessTTL, cfg.RefreshTTL, cfg.AccessSigningKey, cfg.RefreshSigningKey, hasher)
 	services := service.NewServices(service.Deps{
-		Repo:           queries,
-		Hasher:         hasher,
-		Speller:        speller,
-		TokenManager:   tokenManager,
-		AccessTokenTTL: cfg.AccessTTL,
+		Repo:         queries,
+		Hasher:       hasher,
+		Speller:      speller,
+		TokenManager: tokenManager,
 	})
 
 	r := chi.NewRouter()

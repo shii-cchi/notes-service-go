@@ -6,12 +6,11 @@ import (
 	"notes-service-go/pkg/auth"
 	"notes-service-go/pkg/hash"
 	"notes-service-go/pkg/spell"
-	"time"
 )
 
 type Users interface {
 	CreateUser(userCredentials dto.UserCredentialsDto) (dto.UserResponseDto, string, error)
-	Refresh(refreshToken string, accessToken string) (dto.UserResponseDto, string, error)
+	Refresh(refreshToken string) (dto.UserResponseDto, string, error)
 	Login(userCredentials dto.UserCredentialsDto) (dto.UserResponseDto, string, error)
 	Logout(accessToken string) error
 }
@@ -31,12 +30,10 @@ type Deps struct {
 	Hasher       hash.Hasher
 	Speller      spell.Speller
 	TokenManager auth.TokenManager
-
-	AccessTokenTTL time.Duration
 }
 
 func NewServices(deps Deps) *Services {
-	usersService := NewUsersService(deps.Repo, deps.Hasher, deps.TokenManager, deps.AccessTokenTTL)
+	usersService := NewUsersService(deps.Repo, deps.Hasher, deps.TokenManager)
 	notesService := NewNotesService(deps.Repo, deps.Speller, deps.TokenManager)
 
 	return &Services{

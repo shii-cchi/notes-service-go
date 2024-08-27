@@ -69,9 +69,7 @@ func (h UsersHandler) refreshHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	refreshToken := cookie.Value
 
-	accessToken := r.Header.Get("Authorization")
-
-	user, refreshToken, err := h.usersService.Refresh(refreshToken, accessToken)
+	user, refreshToken, err := h.usersService.Refresh(refreshToken)
 	if err != nil {
 		log.Println(err)
 		if strings.HasPrefix(err.Error(), domain.ErrInvalidAccessToken) || strings.HasPrefix(err.Error(), domain.ErrAccessTokenUndefined) {

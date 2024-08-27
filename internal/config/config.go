@@ -9,16 +9,17 @@ import (
 )
 
 type Config struct {
-	Port             string
-	DbUser           string
-	DbPassword       string
-	DbHost           string
-	DbPort           string
-	DbName           string
-	AccessTTL        time.Duration
-	AccessSigningKey string
-	RefreshTTL       time.Duration
-	SpellerURL       string
+	Port              string
+	DbUser            string
+	DbPassword        string
+	DbHost            string
+	DbPort            string
+	DbName            string
+	AccessTTL         time.Duration
+	RefreshTTL        time.Duration
+	AccessSigningKey  string
+	RefreshSigningKey string
+	SpellerURL        string
 }
 
 func LoadConfig() (*Config, error) {
@@ -76,12 +77,6 @@ func LoadConfig() (*Config, error) {
 		return nil, errors.New(domain.ErrParsingAccessTTL)
 	}
 
-	accessSigningKey := os.Getenv("ACCESS_SIGNING_KEY")
-
-	if accessSigningKey == "" {
-		return nil, errors.New("ACCESS_SIGNING_KEY " + domain.ErrUndefinedEnvParam)
-	}
-
 	refreshTTLStr := os.Getenv("REFRESH_TTL")
 
 	if refreshTTLStr == "" {
@@ -94,6 +89,18 @@ func LoadConfig() (*Config, error) {
 		return nil, errors.New(domain.ErrParsingRefreshTTL)
 	}
 
+	accessSigningKey := os.Getenv("ACCESS_SIGNING_KEY")
+
+	if accessSigningKey == "" {
+		return nil, errors.New("ACCESS_SIGNING_KEY " + domain.ErrUndefinedEnvParam)
+	}
+
+	refreshSigningKey := os.Getenv("REFRESH_SIGNING_KEY")
+
+	if refreshSigningKey == "" {
+		return nil, errors.New("REFRESH_SIGNING_KEY " + domain.ErrUndefinedEnvParam)
+	}
+
 	spellerURL := os.Getenv("SPELLER_URL")
 
 	if spellerURL == "" {
@@ -101,15 +108,16 @@ func LoadConfig() (*Config, error) {
 	}
 
 	return &Config{
-		Port:             port,
-		DbUser:           dbUser,
-		DbPassword:       dbPassword,
-		DbHost:           dbHost,
-		DbPort:           dbPort,
-		DbName:           dbName,
-		AccessTTL:        accessTTL,
-		AccessSigningKey: accessSigningKey,
-		RefreshTTL:       refreshTTL,
-		SpellerURL:       spellerURL,
+		Port:              port,
+		DbUser:            dbUser,
+		DbPassword:        dbPassword,
+		DbHost:            dbHost,
+		DbPort:            dbPort,
+		DbName:            dbName,
+		AccessTTL:         accessTTL,
+		RefreshTTL:        refreshTTL,
+		AccessSigningKey:  accessSigningKey,
+		RefreshSigningKey: refreshSigningKey,
+		SpellerURL:        spellerURL,
 	}, nil
 }

@@ -22,12 +22,11 @@ type UsersService struct {
 	AccessTokenTTL time.Duration
 }
 
-func NewUsersService(repo *database.Queries, hasher hash.Hasher, tokenManager auth.TokenManager, accessTokenTTL time.Duration) *UsersService {
+func NewUsersService(repo *database.Queries, hasher hash.Hasher, tokenManager auth.TokenManager) *UsersService {
 	return &UsersService{
-		Repo:           repo,
-		Hasher:         hasher,
-		TokenManager:   tokenManager,
-		AccessTokenTTL: accessTokenTTL,
+		Repo:         repo,
+		Hasher:       hasher,
+		TokenManager: tokenManager,
 	}
 }
 
@@ -50,30 +49,30 @@ func (s *UsersService) CreateUser(userCredentials dto.UserCredentialsDto) (dto.U
 		return dto.UserResponseDto{}, "", fmt.Errorf(domain.ErrCreatingUser+": %s\n", err)
 	}
 
-	refreshToken, hashedRefreshToken, err := s.TokenManager.NewRefreshToken()
+	refreshToken, err := s.TokenManager.NewRefreshToken(userID)
 	if err != nil {
 		return dto.UserResponseDto{}, "", fmt.Errorf(domain.ErrCreatingRefreshToken+": %s\n", err)
 	}
 
-	accessToken, err := s.TokenManager.NewAccessToken(userID, s.AccessTokenTTL)
+	accessToken, err := s.TokenManager.NewAccessToken(userID)
 	if err != nil {
 		return dto.UserResponseDto{}, "", fmt.Errorf(domain.ErrCreatingAccessToken+": %s\n", err)
 	}
 
-	if err = s.Repo.SaveRefreshToken(context.Background(), database.SaveRefreshTokenParams{ID: userID, RefreshToken: hashedRefreshToken}); err != nil {
+	if err = s.Repo.SaveRefreshToken(context.Background(), database.SaveRefreshTokenParams{ID: userID, RefreshToken: refreshToken}); err != nil {
 		return dto.UserResponseDto{}, "", fmt.Errorf(domain.ErrSavingRefreshToken+": %s\n", err)
 	}
 
 	return dto.UserResponseDto{ID: userID, AccessToken: accessToken}, refreshToken, nil
 }
 
-func (s *UsersService) Refresh(refreshToken string, accessToken string) (dto.UserResponseDto, string, error) {
-	userIDStr, err := s.TokenManager.ParseAccessToken(accessToken)
+func (s *UsersService) Refresh(refreshToken string) (dto.UserResponseDto, string, error) {
+	userIDStr, err := s.TokenManager.ParseAccessToken(refreshToken)
 	if err != nil {
-		if err.Error() == domain.ErrAccessTokenUndefined {
+		if err.Error() == domain.ErrRefreshTokenUndefined {
 			return dto.UserResponseDto{}, "", err
 		}
-		return dto.UserResponseDto{}, "", errors.New(domain.ErrInvalidAccessToken)
+		return dto.UserResponseDto{}, "", errors.New(domain.ErrInvalidRefreshToken)
 	}
 
 	userID, err := uuid.Parse(userIDStr)
@@ -81,27 +80,26 @@ func (s *UsersService) Refresh(refreshToken string, accessToken string) (dto.Use
 		return dto.UserResponseDto{}, "", fmt.Errorf(domain.ErrParsingID+" :%s\n", err)
 	}
 
-	hashedStoredRefreshToken, err := s.Repo.GetRefreshTokenById(context.Background(), userID)
+	storedRefreshToken, err := s.Repo.GetRefreshTokenById(context.Background(), userID)
 	if err != nil {
 		return dto.UserResponseDto{}, "", fmt.Errorf(domain.ErrGettingRefreshTokenFromDB+" :%s\n", err)
 	}
 
-	valid := s.Hasher.IsValidData(hashedStoredRefreshToken, refreshToken)
-	if !valid {
+	if storedRefreshToken != refreshToken {
 		return dto.UserResponseDto{}, "", errors.New(domain.ErrInvalidRefreshToken)
 	}
 
-	refreshToken, hashedRefreshToken, err := s.TokenManager.NewRefreshToken()
+	refreshToken, err = s.TokenManager.NewRefreshToken(userID)
 	if err != nil {
 		return dto.UserResponseDto{}, "", fmt.Errorf(domain.ErrCreatingRefreshToken+": %s\n", err)
 	}
 
-	accessToken, err = s.TokenManager.NewAccessToken(userID, s.AccessTokenTTL)
+	accessToken, err := s.TokenManager.NewAccessToken(userID)
 	if err != nil {
 		return dto.UserResponseDto{}, "", fmt.Errorf(domain.ErrCreatingAccessToken+": %s\n", err)
 	}
 
-	if err = s.Repo.SaveRefreshToken(context.Background(), database.SaveRefreshTokenParams{ID: userID, RefreshToken: hashedRefreshToken}); err != nil {
+	if err = s.Repo.SaveRefreshToken(context.Background(), database.SaveRefreshTokenParams{ID: userID, RefreshToken: refreshToken}); err != nil {
 		return dto.UserResponseDto{}, "", fmt.Errorf(domain.ErrSavingRefreshToken+": %s\n", err)
 	}
 
@@ -122,17 +120,17 @@ func (s *UsersService) Login(userCredentials dto.UserCredentialsDto) (dto.UserRe
 		return dto.UserResponseDto{}, "", errors.New(domain.ErrWrongPassword)
 	}
 
-	refreshToken, hashedRefreshToken, err := s.TokenManager.NewRefreshToken()
+	refreshToken, err := s.TokenManager.NewRefreshToken(user.ID)
 	if err != nil {
 		return dto.UserResponseDto{}, "", fmt.Errorf(domain.ErrCreatingRefreshToken+": %s\n", err)
 	}
 
-	accessToken, err := s.TokenManager.NewAccessToken(user.ID, s.AccessTokenTTL)
+	accessToken, err := s.TokenManager.NewAccessToken(user.ID)
 	if err != nil {
 		return dto.UserResponseDto{}, "", fmt.Errorf(domain.ErrCreatingAccessToken+": %s\n", err)
 	}
 
-	if err = s.Repo.SaveRefreshToken(context.Background(), database.SaveRefreshTokenParams{ID: user.ID, RefreshToken: hashedRefreshToken}); err != nil {
+	if err = s.Repo.SaveRefreshToken(context.Background(), database.SaveRefreshTokenParams{ID: user.ID, RefreshToken: refreshToken}); err != nil {
 		return dto.UserResponseDto{}, "", fmt.Errorf(domain.ErrSavingRefreshToken+": %s\n", err)
 	}
 
