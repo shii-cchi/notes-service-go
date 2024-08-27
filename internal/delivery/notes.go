@@ -6,8 +6,8 @@ import (
 	"github.com/go-playground/validator/v10"
 	"log"
 	"net/http"
-	"notes-service-go/internal/constants"
 	"notes-service-go/internal/delivery/dto"
+	"notes-service-go/internal/domain"
 	"notes-service-go/internal/service"
 	"strings"
 )
@@ -40,11 +40,11 @@ func (h NotesHandler) getHandler(w http.ResponseWriter, r *http.Request) {
 	notes, err := h.notesService.GetNotes(accessToken)
 	if err != nil {
 		log.Println(err)
-		if strings.HasPrefix(err.Error(), constants.ErrInvalidAccessToken) {
-			respondWithError(w, http.StatusUnauthorized, constants.ErrInvalidAccessToken)
+		if strings.HasPrefix(err.Error(), domain.ErrInvalidAccessToken) {
+			respondWithError(w, http.StatusUnauthorized, domain.ErrInvalidAccessToken)
 			return
 		}
-		respondWithError(w, http.StatusInternalServerError, constants.ErrGettingNotes)
+		respondWithError(w, http.StatusInternalServerError, domain.ErrGettingNotes)
 		return
 	}
 
@@ -54,14 +54,14 @@ func (h NotesHandler) getHandler(w http.ResponseWriter, r *http.Request) {
 func (h NotesHandler) createHandler(w http.ResponseWriter, r *http.Request) {
 	noteInput := dto.NoteInputDto{}
 	if err := json.NewDecoder(r.Body).Decode(&noteInput); err != nil {
-		log.Printf(constants.ErrParsingNoteInput+" :%s\n", err)
-		respondWithError(w, http.StatusBadRequest, constants.ErrParsingNoteInput)
+		log.Printf(domain.ErrParsingNoteInput+" :%s\n", err)
+		respondWithError(w, http.StatusBadRequest, domain.ErrParsingNoteInput)
 		return
 	}
 
 	if err := h.validator.Struct(&noteInput); err != nil {
-		log.Printf(constants.ErrInvalidNoteInput+" :%s\n", err)
-		respondWithError(w, http.StatusBadRequest, constants.ErrInvalidNoteInput)
+		log.Printf(domain.ErrInvalidNoteInput+" :%s\n", err)
+		respondWithError(w, http.StatusBadRequest, domain.ErrInvalidNoteInput)
 		return
 	}
 
@@ -70,15 +70,15 @@ func (h NotesHandler) createHandler(w http.ResponseWriter, r *http.Request) {
 	note, err := h.notesService.CreateNote(noteInput, accessToken)
 	if err != nil {
 		log.Println(err)
-		if strings.HasPrefix(err.Error(), constants.ErrInvalidAccessToken) {
-			respondWithError(w, http.StatusUnauthorized, constants.ErrInvalidAccessToken)
+		if strings.HasPrefix(err.Error(), domain.ErrInvalidAccessToken) {
+			respondWithError(w, http.StatusUnauthorized, domain.ErrInvalidAccessToken)
 			return
 		}
-		if strings.HasPrefix(err.Error(), constants.ErrSpellingText) {
+		if strings.HasPrefix(err.Error(), domain.ErrSpellingText) {
 			respondWithError(w, http.StatusBadRequest, err.Error())
 			return
 		}
-		respondWithError(w, http.StatusInternalServerError, constants.ErrCreatingNote)
+		respondWithError(w, http.StatusInternalServerError, domain.ErrCreatingNote)
 		return
 	}
 

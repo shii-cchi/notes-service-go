@@ -6,8 +6,8 @@ import (
 	"github.com/go-playground/validator/v10"
 	"log"
 	"net/http"
-	"notes-service-go/internal/constants"
 	"notes-service-go/internal/delivery/dto"
+	"notes-service-go/internal/domain"
 	"notes-service-go/internal/service"
 	"strings"
 	"time"
@@ -43,25 +43,25 @@ func (h UsersHandler) usersHandlers() http.Handler {
 func (h UsersHandler) registerHandler(w http.ResponseWriter, r *http.Request) {
 	userCredentials := dto.UserCredentialsDto{}
 	if err := json.NewDecoder(r.Body).Decode(&userCredentials); err != nil {
-		log.Printf(constants.ErrParsingUserCredentials+" :%s\n", err)
-		respondWithError(w, http.StatusBadRequest, constants.ErrParsingUserCredentials)
+		log.Printf(domain.ErrParsingUserCredentials+" :%s\n", err)
+		respondWithError(w, http.StatusBadRequest, domain.ErrParsingUserCredentials)
 		return
 	}
 
 	if err := h.validator.Struct(&userCredentials); err != nil {
-		log.Printf(constants.ErrInvalidUserCredentials+" :%s\n", err)
-		respondWithError(w, http.StatusBadRequest, constants.ErrInvalidUserCredentials)
+		log.Printf(domain.ErrInvalidUserCredentials+" :%s\n", err)
+		respondWithError(w, http.StatusBadRequest, domain.ErrInvalidUserCredentials)
 		return
 	}
 
 	user, refreshToken, err := h.usersService.CreateUser(userCredentials)
 	if err != nil {
 		log.Println(err)
-		if strings.HasPrefix(err.Error(), constants.ErrUserAlreadyExists) {
-			respondWithError(w, http.StatusBadRequest, constants.ErrUserAlreadyExists)
+		if strings.HasPrefix(err.Error(), domain.ErrUserAlreadyExists) {
+			respondWithError(w, http.StatusBadRequest, domain.ErrUserAlreadyExists)
 			return
 		}
-		respondWithError(w, http.StatusInternalServerError, constants.ErrCreatingUser)
+		respondWithError(w, http.StatusInternalServerError, domain.ErrCreatingUser)
 		return
 	}
 	setCookie(w, refreshToken, h.refreshTokenTTL)
@@ -72,10 +72,10 @@ func (h UsersHandler) refreshHandler(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("refresh_token")
 	if err != nil {
 		if err == http.ErrNoCookie {
-			respondWithError(w, http.StatusUnauthorized, constants.ErrCookieNotFound)
+			respondWithError(w, http.StatusUnauthorized, domain.ErrCookieNotFound)
 			return
 		}
-		respondWithError(w, http.StatusUnauthorized, constants.ErrGettingRefreshTokenFromCookie)
+		respondWithError(w, http.StatusUnauthorized, domain.ErrGettingRefreshTokenFromCookie)
 		return
 	}
 	refreshToken := cookie.Value
@@ -85,15 +85,15 @@ func (h UsersHandler) refreshHandler(w http.ResponseWriter, r *http.Request) {
 	user, refreshToken, err := h.usersService.Refresh(refreshToken, accessToken)
 	if err != nil {
 		log.Println(err)
-		if strings.HasPrefix(err.Error(), constants.ErrInvalidAccessToken) {
-			respondWithError(w, http.StatusUnauthorized, constants.ErrInvalidAccessToken)
+		if strings.HasPrefix(err.Error(), domain.ErrInvalidAccessToken) {
+			respondWithError(w, http.StatusUnauthorized, domain.ErrInvalidAccessToken)
 			return
 		}
-		if strings.HasPrefix(err.Error(), constants.ErrInvalidRefreshToken) {
-			respondWithError(w, http.StatusUnauthorized, constants.ErrInvalidRefreshToken)
+		if strings.HasPrefix(err.Error(), domain.ErrInvalidRefreshToken) {
+			respondWithError(w, http.StatusUnauthorized, domain.ErrInvalidRefreshToken)
 			return
 		}
-		respondWithError(w, http.StatusInternalServerError, constants.ErrRefresh)
+		respondWithError(w, http.StatusInternalServerError, domain.ErrRefresh)
 		return
 	}
 	setCookie(w, refreshToken, h.refreshTokenTTL)
@@ -103,25 +103,25 @@ func (h UsersHandler) refreshHandler(w http.ResponseWriter, r *http.Request) {
 func (h UsersHandler) loginHandler(w http.ResponseWriter, r *http.Request) {
 	userCredentials := dto.UserCredentialsDto{}
 	if err := json.NewDecoder(r.Body).Decode(&userCredentials); err != nil {
-		log.Printf(constants.ErrParsingUserCredentials+" :%s\n", err)
-		respondWithError(w, http.StatusBadRequest, constants.ErrParsingUserCredentials)
+		log.Printf(domain.ErrParsingUserCredentials+" :%s\n", err)
+		respondWithError(w, http.StatusBadRequest, domain.ErrParsingUserCredentials)
 		return
 	}
 
 	if err := h.validator.Struct(&userCredentials); err != nil {
-		log.Printf(constants.ErrInvalidUserCredentials+" :%s\n", err)
-		respondWithError(w, http.StatusBadRequest, constants.ErrInvalidUserCredentials)
+		log.Printf(domain.ErrInvalidUserCredentials+" :%s\n", err)
+		respondWithError(w, http.StatusBadRequest, domain.ErrInvalidUserCredentials)
 		return
 	}
 
 	user, refreshToken, err := h.usersService.Login(userCredentials)
 	if err != nil {
 		log.Println(err)
-		if strings.HasPrefix(err.Error(), constants.ErrUserNotFound) || strings.HasPrefix(err.Error(), constants.ErrWrongCredentials) {
-			respondWithError(w, http.StatusBadRequest, constants.ErrWrongCredentials)
+		if strings.HasPrefix(err.Error(), domain.ErrUserNotFound) || strings.HasPrefix(err.Error(), domain.ErrWrongCredentials) {
+			respondWithError(w, http.StatusBadRequest, domain.ErrWrongCredentials)
 			return
 		}
-		respondWithError(w, http.StatusInternalServerError, constants.ErrLogin)
+		respondWithError(w, http.StatusInternalServerError, domain.ErrLogin)
 		return
 	}
 	setCookie(w, refreshToken, h.refreshTokenTTL)
@@ -133,11 +133,11 @@ func (h UsersHandler) logoutHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.usersService.Logout(accessToken); err != nil {
 		log.Println(err)
-		if strings.HasPrefix(err.Error(), constants.ErrInvalidAccessToken) {
-			respondWithError(w, http.StatusUnauthorized, constants.ErrInvalidAccessToken)
+		if strings.HasPrefix(err.Error(), domain.ErrInvalidAccessToken) {
+			respondWithError(w, http.StatusUnauthorized, domain.ErrInvalidAccessToken)
 			return
 		}
-		respondWithError(w, http.StatusInternalServerError, constants.ErrLogout)
+		respondWithError(w, http.StatusInternalServerError, domain.ErrLogout)
 		return
 	}
 

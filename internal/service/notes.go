@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
-	"notes-service-go/internal/constants"
 	"notes-service-go/internal/database"
 	"notes-service-go/internal/delivery/dto"
+	"notes-service-go/internal/domain"
 	"notes-service-go/pkg/auth"
 	"notes-service-go/pkg/spell"
 )
@@ -29,17 +29,17 @@ func NewNotesService(repo *database.Queries, speller spell.Speller, tokenManager
 func (s *NotesService) GetNotes(accessToken string) ([]dto.NoteResponseDto, error) {
 	userIDStr, err := s.TokenManager.ParseAccessToken(accessToken)
 	if err != nil {
-		return nil, fmt.Errorf(constants.ErrInvalidAccessToken+" :%s\n", err)
+		return nil, fmt.Errorf(domain.ErrInvalidAccessToken+" :%s\n", err)
 	}
 
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		return nil, fmt.Errorf(constants.ErrParsingID+" :%s\n", err)
+		return nil, fmt.Errorf(domain.ErrParsingID+" :%s\n", err)
 	}
 
 	notes, err := s.Repo.GetNotes(context.Background(), userID)
 	if err != nil {
-		return nil, fmt.Errorf(constants.ErrGettingNotes+" :%s\n", err)
+		return nil, fmt.Errorf(domain.ErrGettingNotes+" :%s\n", err)
 	}
 
 	return s.newNotesResponseDto(notes), nil
@@ -48,26 +48,26 @@ func (s *NotesService) GetNotes(accessToken string) ([]dto.NoteResponseDto, erro
 func (s *NotesService) CreateNote(noteInput dto.NoteInputDto, accessToken string) (dto.NoteResponseDto, error) {
 	userIDStr, err := s.TokenManager.ParseAccessToken(accessToken)
 	if err != nil {
-		return dto.NoteResponseDto{}, fmt.Errorf(constants.ErrInvalidAccessToken+" :%s\n", err)
+		return dto.NoteResponseDto{}, fmt.Errorf(domain.ErrInvalidAccessToken+" :%s\n", err)
 	}
 
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		return dto.NoteResponseDto{}, fmt.Errorf(constants.ErrParsingID+" :%s\n", err)
+		return dto.NoteResponseDto{}, fmt.Errorf(domain.ErrParsingID+" :%s\n", err)
 	}
 
 	spellingErrors, err := s.Speller.CheckText(noteInput.Content)
 	if err != nil {
-		return dto.NoteResponseDto{}, fmt.Errorf(constants.ErrCheckingSpellingErrors+" :%s\n", err)
+		return dto.NoteResponseDto{}, fmt.Errorf(domain.ErrCheckingSpellingErrors+" :%s\n", err)
 	}
 
 	if len(spellingErrors) != 0 {
-		return dto.NoteResponseDto{}, errors.New(constants.ErrSpellingText + ". " + s.Speller.FormatErrors(spellingErrors))
+		return dto.NoteResponseDto{}, errors.New(domain.ErrSpellingText + ". " + s.Speller.FormatErrors(spellingErrors))
 	}
 
 	note, err := s.Repo.CreateNote(context.Background(), database.CreateNoteParams{Name: noteInput.Name, Content: noteInput.Content, UserID: userID})
 	if err != nil {
-		return dto.NoteResponseDto{}, fmt.Errorf(constants.ErrCreatingNote+" :%s\n", err)
+		return dto.NoteResponseDto{}, fmt.Errorf(domain.ErrCreatingNote+" :%s\n", err)
 	}
 
 	return s.newNoteResponseDto(note), nil

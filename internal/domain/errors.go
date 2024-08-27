@@ -1,4 +1,4 @@
-package constants
+package domain
 
 const (
 	ErrUndefinedEnvParam = "parameter is undefined"
