@@ -72,10 +72,6 @@ func (h UsersHandler) refreshHandler(w http.ResponseWriter, r *http.Request) {
 	user, refreshToken, err := h.usersService.Refresh(refreshToken)
 	if err != nil {
 		log.Println(err)
-		if strings.HasPrefix(err.Error(), domain.ErrInvalidAccessToken) || strings.HasPrefix(err.Error(), domain.ErrAccessTokenUndefined) {
-			delivery.RespondWithError(w, http.StatusUnauthorized, err.Error())
-			return
-		}
 		if strings.HasPrefix(err.Error(), domain.ErrInvalidRefreshToken) {
 			delivery.RespondWithError(w, http.StatusUnauthorized, domain.ErrInvalidRefreshToken)
 			return
@@ -107,8 +103,8 @@ func (h UsersHandler) logoutHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.usersService.Logout(accessToken); err != nil {
 		log.Println(err)
-		if strings.HasPrefix(err.Error(), domain.ErrInvalidAccessToken) {
-			delivery.RespondWithError(w, http.StatusUnauthorized, domain.ErrInvalidAccessToken)
+		if strings.HasPrefix(err.Error(), domain.ErrInvalidAccessToken) || strings.HasPrefix(err.Error(), domain.ErrAccessTokenUndefined) {
+			delivery.RespondWithError(w, http.StatusUnauthorized, err.Error())
 			return
 		}
 		delivery.RespondWithError(w, http.StatusInternalServerError, domain.ErrLogout)

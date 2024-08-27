@@ -67,7 +67,7 @@ func (s *UsersService) CreateUser(userCredentials dto.UserCredentialsDto) (dto.U
 }
 
 func (s *UsersService) Refresh(refreshToken string) (dto.UserResponseDto, string, error) {
-	userIDStr, err := s.TokenManager.ParseAccessToken(refreshToken)
+	userIDStr, err := s.TokenManager.ParseRefreshToken(refreshToken)
 	if err != nil {
 		if err.Error() == domain.ErrRefreshTokenUndefined {
 			return dto.UserResponseDto{}, "", err

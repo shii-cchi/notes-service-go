@@ -41,8 +41,8 @@ func (h NotesHandler) getHandler(w http.ResponseWriter, r *http.Request) {
 	notes, err := h.notesService.GetNotes(accessToken)
 	if err != nil {
 		log.Println(err)
-		if strings.HasPrefix(err.Error(), domain.ErrInvalidAccessToken) {
-			delivery.RespondWithError(w, http.StatusUnauthorized, domain.ErrInvalidAccessToken)
+		if strings.HasPrefix(err.Error(), domain.ErrInvalidAccessToken) || strings.HasPrefix(err.Error(), domain.ErrAccessTokenUndefined) {
+			delivery.RespondWithError(w, http.StatusUnauthorized, err.Error())
 			return
 		}
 		delivery.RespondWithError(w, http.StatusInternalServerError, domain.ErrGettingNotes)

@@ -7,7 +7,6 @@ const (
 )
 
 const (
-	ErrCookieNotFound                = "cookie with name refresh_token not found"
 	ErrGettingRefreshTokenFromCookie = "error getting refresh token from cookie"
 	ErrCreatingRefreshToken          = "error creating refresh token"
 	ErrCreatingAccessToken           = "error creating access token"
