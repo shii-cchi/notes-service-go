@@ -1,0 +1,121 @@
+{
+	"info": {
+		"_postman_id": "d2d8ce19-211d-43a5-8256-465ec490d54d",
+		"name": "notes api",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "30449812"
+	},
+	"item": [
+		{
+			"name": "/users/register",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"login\": \"kengen\",\r\n    \"password\": \"zhilong666\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8888/users/register"
+			},
+			"response": []
+		},
+		{
+			"name": "/users/login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"login\": \"kengen\",\r\n    \"password\": \"zhilong666\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8888/users/login"
+			},
+			"response": []
+		},
+		{
+			"name": "/users/logout",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MjQ3OTk5MDQsImlhdCI6MTcyNDc5OTAwNCwic3ViIjoiODQ4YWVmNzktZWUxNi00MWU1LThjZTgtNTFkZGE2YzQ5ZThhIn0.5zrGt1xzpzhHFUBv5t3DihF603xhChc9G22w4mHWTtgB946uGypB1_HIu0ItNXeIcXe9iYxdyUUAhWceBlYLdA",
+						"type": "text"
+					}
+				],
+				"url": "http://localhost:8888/users/logout"
+			},
+			"response": []
+		},
+		{
+			"name": "/users/refresh",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "http://localhost:8888/users/refresh"
+			},
+			"response": []
+		},
+		{
+			"name": "/notes",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MjQ4MDY0NzMsImlhdCI6MTcyNDgwNTU3Mywic3ViIjoiMjEyN2Q2YTAtMzc2ZS00N2U2LTk5ZjUtZDRlYjQ0YWMzNmM2In0.ZHDUnzhvFXSlcoKx6Kx123EWQ63j7ADzjYm0qBzdw5KyS70QNVQqk7NQzFKShFP2RdW0FtooZ92fAafmzWUA7Q",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"name\",\r\n    \"content\": \"some interesting...\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8888/notes"
+			},
+			"response": []
+		},
+		{
+			"name": "/notes",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MjQ4MDY0NzMsImlhdCI6MTcyNDgwNTU3Mywic3ViIjoiMjEyN2Q2YTAtMzc2ZS00N2U2LTk5ZjUtZDRlYjQ0YWMzNmM2In0.ZHDUnzhvFXSlcoKx6Kx123EWQ63j7ADzjYm0qBzdw5KyS70QNVQqk7NQzFKShFP2RdW0FtooZ92fAafmzWUA7Q",
+						"type": "text"
+					}
+				],
+				"url": "http://localhost:8888/notes"
+			},
+			"response": []
+		}
+	]
+}
